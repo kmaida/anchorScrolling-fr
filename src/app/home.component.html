@@ -1,0 +1,35 @@
+<h2>Overview</h2>
+
+<p>If <code>anchorScrolling</code> is enabled on the Angular router and the app loads a route that has a hash that does <em>not</em> follow an appropriate format expected for a selector, then a <code>DOMException</code> error is thrown.</p>
+
+<p>For example, <code>#somehash</code> will not return the error, since this is a valid element selector, even if it is not present on the page (scrolling will fail silently in this case).</p>
+
+<p>However, <code>#somedata=other</code> will return the error, since this is not a valid element selector and <code>querySelector</code> doesn't know what to do with it.</p>
+
+<p>Under <em>standard circumstances</em>, this may normally be fine, as it is likely expected that if a user is passing data in the URL, they should be looking to use query parameters with <code>?</code> instead of a hash fragment with <code>#</code>.</p>
+
+<p>However, there is a <strong>major use case</strong> for data being passed in a hash fragment, and it is done this way <em>in accordance with IETF standards</em>.</p>
+
+<h2>Background: OIDC Implicit Flow</h2>
+<p>
+  When conforming to <a href="https://tools.ietf.org/html/rfc6749#section-4.2">OIDC implicit grant</a> standards for authentication in Single Page Applications, data is returned from an <em>OIDC-conformant authorization server</em> (such as Auth0, Okta, Gigya, Ping Identity, etc.) in a hash fragment. This hash fragment follows a standard format that resembles the following:
+</p>
+<pre class="text-info">#access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkZha2UgVG9rZW4iLCJpYXQiOjE1MTYyMzkwMjJ9.fg-Dm3WJDDPt3J18KcIipEka0n92sFbIF9N7JqCLnQ_194uScpG7nt9JOEDHE0lqgmNTKf1xr31X5rQPO1HkmGMPzQQ64TLoyr1qs8azzdpJKdm3w4R5qn9Z52zA1deIa1-dBShXrC0ynhXBCXaWaCymRD7n6duyBbuZAmAieaI&expires_in=86400</pre>
+
+<p>
+  The most common way to handle this in SPAs is to set up a callback route. This is the route that the authorization server redirects back to (<code>redirect_uri</code>) and adds the hash data to. In the application, the hash is parsed and then removed and the user is redirected within the SPA.
+</p>
+
+<p class="text-center">
+  <button class="btn btn-sm btn-primary" (click)="goToCallback()">
+    Load Callback with Example Auth Data
+  </button>
+</p>
+
+<h2>Proposed Solution Options</h2>
+<p>Within the Angular framework:</p>
+<ul>
+  <li>Add a condition in order not to throw an error when hash fragments are not valid selectors; this could potentially be done in <code>ExtraOptions</code> so that it is not enabled by default, but can be turned on by developers using an OIDC conformant authorization server</li>
+  <li>Implement per-route configurable settings in the Angular Router, allowing specified routes to be individually exempt from <code>anchorScrolling</code> that was set at the module level</li>
+  <li>Other?</li>
+</ul>
